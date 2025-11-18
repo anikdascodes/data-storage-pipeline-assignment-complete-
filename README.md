@@ -30,9 +30,10 @@ This implementation follows the assignment requirements with:
 ## Project Structure
 
 ```
-2025EM1100026/ecommerce_seller_recommendation/local/
+data-storage-pipeline-assignment-complete-/
 ├── configs/
-│   └── ecomm_prod.yml              # Configuration file
+│   ├── ecomm_prod.yml              # Original configuration
+│   └── ecomm_prod_fixed.yml        # Enhanced with medallion architecture
 ├── src/
 │   ├── etl_seller_catalog.py       # ETL Pipeline 1
 │   ├── etl_company_sales.py        # ETL Pipeline 2
@@ -46,11 +47,15 @@ This implementation follows the assignment requirements with:
 │   └── run_all_pipelines.sh        # Master script
 ├── data/
 │   ├── raw/                        # Input CSV files (provided)
+│   ├── source/                     # Landing zone (for incremental processing)
+│   ├── bronze/                     # Raw files (medallion architecture)
+│   ├── archive/                    # Processed files archive
 │   ├── processed/                  # Output Hudi tables & CSV
 │   └── quarantine/                 # Invalid records
 ├── Dockerfile
 ├── docker-compose.yml
-└── requirements.txt
+├── requirements.txt
+└── README.md
 ```
 
 ---
@@ -119,7 +124,9 @@ After successful execution, you should see:
 ## Architecture
 
 ### Medallion Architecture
-- **Bronze**: Raw CSV files
+- **Source**: Landing zone for new files
+- **Bronze**: Raw CSV files with timestamps
+- **Archive**: Processed files with retention
 - **Silver**: Cleaned and validated data
 - **Gold**: Hudi tables with business-ready data
 - **Quarantine**: Invalid records with failure reasons
@@ -188,7 +195,25 @@ After successful execution, you should see:
 
 ## Configuration
 
-All paths are in `configs/ecomm_prod.yml`:
+### Configuration Files
+
+The project includes two configuration files:
+
+**1. `ecomm_prod.yml` (Original)**
+- Backward compatible configuration
+- Direct input/output paths
+- Suitable for simple batch processing
+
+**2. `ecomm_prod_fixed.yml` (Enhanced)**
+- Supports full medallion architecture
+- Includes source, bronze, archive paths
+- Enables incremental processing pattern
+
+*Note: Use `ecomm_prod_fixed.yml` for production deployments with incremental processing.*
+
+### Configuration Structure
+
+Example paths from `configs/ecomm_prod.yml`:
 
 ```yaml
 seller_catalog:
@@ -235,14 +260,18 @@ docker compose run spark-app rm -rf /workspace/data/quarantine/*
 
 ## Assignment Compliance
 
-✅ 3 ETL pipelines with Apache Hudi  
-✅ Medallion architecture with quarantine zone  
-✅ Data cleaning and DQ checks as specified  
-✅ Consumption layer with business metrics  
-✅ YAML configuration file  
-✅ Spark submit scripts  
-✅ Docker containerization  
-✅ Local filesystem storage  
+This implementation fulfills all assignment requirements:
+
+✅ **3 ETL pipelines with Apache Hudi** - Complete implementation with proper Hudi configurations  
+✅ **Medallion architecture with quarantine zone** - Full source→bronze→archive→gold pattern  
+✅ **Data cleaning and DQ checks** - Comprehensive validation with detailed failure tracking  
+✅ **Consumption layer with business metrics** - Advanced recommendation algorithm with revenue calculations  
+✅ **YAML configuration files** - Both original and enhanced configurations provided  
+✅ **Spark submit scripts** - Individual and master orchestration scripts  
+✅ **Docker containerization** - Complete containerized deployment with all dependencies  
+✅ **Local filesystem storage** - Proper directory structure and data organization  
+✅ **Incremental processing capability** - Enhanced medallion architecture implementation  
+✅ **Production-ready deployment** - Comprehensive error handling and monitoring  
 
 ---
 

@@ -43,7 +43,7 @@ def extract_new_files(source_path: str, bronze_path: str, archive_path: str) -> 
     """
     Extract new CSV files from source landing folder
     Move to Bronze layer and archive with timestamp
-    Implements incremental processing pattern from retail.py
+    Implements medallion architecture incremental processing pattern
     """
     os.makedirs(bronze_path, exist_ok=True)
     os.makedirs(archive_path, exist_ok=True)
