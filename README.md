@@ -58,7 +58,7 @@ This project implements a data pipeline for an e-commerce recommendation system 
 ### Step 1: Build Docker Image
 
 ```bash
-docker-compose build
+docker compose build
 ```
 
 **Note**: First build takes 10-15 minutes (downloads Spark and dependencies)
@@ -66,7 +66,7 @@ docker-compose build
 ### Step 2: Run All Pipelines
 
 ```bash
-docker-compose run spark-app bash /workspace/scripts/run_all_pipelines.sh
+docker compose run spark-app bash /workspace/scripts/run_all_pipelines.sh
 ```
 
 This executes:
@@ -81,7 +81,7 @@ This executes:
 
 ```bash
 # Start container
-docker-compose run spark-app bash
+docker compose run spark-app bash
 
 # Inside container, run:
 bash /workspace/scripts/etl_seller_catalog_spark_submit.sh
@@ -194,11 +194,11 @@ ls -la /workspace/data/quarantine/competitor_sales/
 
 ### 3. Incremental Processing
 
-**Append Mode with Upsert**:
-- Uses `mode("append")` instead of `mode("overwrite")`
-- Hudi's upsert operation handles duplicates automatically
-- Idempotent: Re-running with same data doesn't create duplicates
-- Supports true incremental data loading
+**Overwrite Mode with Medallion Architecture**:
+- Uses `mode("overwrite")` as required by assignment specifications
+- Implements medallion architecture: source → bronze → archive
+- Supports incremental processing through file movement pattern
+- Maintains audit trail in archive layer for compliance
 
 ### 4. Performance Optimizations
 
@@ -270,8 +270,8 @@ chmod +x scripts/*.sh
 
 **Issue: Clean Previous Runs**
 ```bash
-docker-compose run spark-app rm -rf /workspace/data/processed/*
-docker-compose run spark-app rm -rf /workspace/data/quarantine/*
+docker compose run spark-app rm -rf /workspace/data/processed/*
+docker compose run spark-app rm -rf /workspace/data/quarantine/*
 ```
 
 ---
