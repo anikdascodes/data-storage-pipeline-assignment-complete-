@@ -11,12 +11,19 @@
 
 This project implements a data pipeline for an e-commerce recommendation system that identifies top-selling items missing from each seller's catalog. The system uses Apache Spark and Apache Hudi to process sales data and generate actionable recommendations.
 
-**✅ CRITICAL FIXES IMPLEMENTED:**
-- Fixed Hudi write mode from "append" to "overwrite" (as required by assignment)
-- Added incremental processing with medallion architecture (source → bronze → archive)
-- Maintained backward compatibility with existing configurations
+## Key Features
 
-📋 **See [FIXES_SUMMARY.md](FIXES_SUMMARY.md) for detailed information about all changes.**
+- **Apache Hudi Integration**: Uses overwrite mode for data consistency as required
+- **Medallion Architecture**: Implements incremental processing with source → bronze → archive pattern
+- **Data Quality**: Comprehensive validation with quarantine zone for invalid records
+- **Scalable Design**: Containerized with Docker for easy deployment
+
+## Implementation Notes
+
+This implementation follows the assignment requirements with:
+- **Overwrite Mode**: All ETL pipelines use `.mode("overwrite")` for Hudi tables
+- **Incremental Processing**: Added `extract_new_files()` function for medallion architecture
+- **Backward Compatibility**: Supports both legacy and new configuration formats
 
 ---
 
@@ -61,21 +68,21 @@ This project implements a data pipeline for an e-commerce recommendation system 
 docker compose build
 ```
 
-**Note**: First build takes 10-15 minutes (downloads Spark and dependencies)
+*Note: First build takes 10-15 minutes to download Spark and dependencies*
 
-### Step 2: Run All Pipelines
+### Step 2: Run Complete Pipeline
 
 ```bash
 docker compose run spark-app bash /workspace/scripts/run_all_pipelines.sh
 ```
 
-This executes:
+This will run all four components:
 1. Seller Catalog ETL
 2. Company Sales ETL  
 3. Competitor Sales ETL
-4. Consumption Layer (Recommendations)
+4. Recommendation Generation
 
-**Expected Runtime**: 10-20 minutes
+*Expected runtime: 10-20 minutes depending on system*
 
 ### Alternative: Run Individual Pipelines
 
@@ -92,28 +99,20 @@ bash /workspace/scripts/consumption_recommendation_spark_submit.sh
 
 ---
 
-## Verify Outputs
+## Expected Outputs
 
-After execution, check the following locations:
+After successful execution, you should see:
 
-### 1. Hudi Tables (Gold Layer)
-```bash
-ls -la /workspace/data/processed/seller_catalog_hudi/
-ls -la /workspace/data/processed/company_sales_hudi/
-ls -la /workspace/data/processed/competitor_sales_hudi/
-```
+**Hudi Tables (Gold Layer):**
+- `/workspace/data/processed/seller_catalog_hudi/` - Seller catalog data
+- `/workspace/data/processed/company_sales_hudi/` - Company sales data  
+- `/workspace/data/processed/competitor_sales_hudi/` - Competitor sales data
 
-### 2. Recommendations CSV
-```bash
-ls -la /workspace/data/processed/recommendations_csv/
-```
+**Final Recommendations:**
+- `/workspace/data/processed/recommendations_csv/seller_recommend_data.csv`
 
-### 3. Quarantine Records (Invalid Data)
-```bash
-ls -la /workspace/data/quarantine/seller_catalog/
-ls -la /workspace/data/quarantine/company_sales/
-ls -la /workspace/data/quarantine/competitor_sales/
-```
+**Data Quality Reports:**
+- `/workspace/data/quarantine/*/` - Invalid records with failure reasons
 
 ---
 
@@ -168,64 +167,22 @@ ls -la /workspace/data/quarantine/competitor_sales/
 
 ## Design Decisions
 
-### 1. Hudi Key Generators
+### Key Design Decisions
 
-**ComplexKeyGenerator** (Seller Catalog & Competitor Sales):
-- Used for composite keys: `(seller_id, item_id)`
-- Allows unique identification of records with multiple key fields
-- Ensures proper upsert behavior for seller-item combinations
+**Hudi Configuration**:
+- Seller Catalog & Competitor Sales use ComplexKeyGenerator for composite keys (seller_id, item_id)
+- Company Sales uses NonpartitionedKeyGenerator for single key (item_id)
+- Seller Catalog partitioned by category for better query performance
 
-**NonpartitionedKeyGenerator** (Company Sales):
-- Used for single key: `item_id`
-- Simpler configuration for single-field keys
-- No partitioning needed as data is queried by item_id
+**Data Processing**:
+- Overwrite mode ensures data consistency as required by assignment
+- Medallion architecture with source → bronze → archive for incremental processing
+- Quarantine zone separates invalid records for data quality monitoring
 
-### 2. Partitioning Strategy
-
-**Seller Catalog - Partitioned by Category**:
-- Reason: Queries often filter by category (e.g., "Electronics", "Footwear")
-- Benefit: Faster query performance for category-based analysis
-- Trade-off: Slightly more complex Hudi configuration
-
-**Company Sales & Competitor Sales - Non-partitioned**:
-- Reason: Data is queried by item_id across all records
-- Benefit: Simpler configuration, no partition overhead
-- Trade-off: Slightly slower for very large datasets
-
-### 3. Incremental Processing
-
-**Overwrite Mode with Medallion Architecture**:
-- Uses `mode("overwrite")` as required by assignment specifications
-- Implements medallion architecture: source → bronze → archive
-- Supports incremental processing through file movement pattern
-- Maintains audit trail in archive layer for compliance
-
-### 4. Performance Optimizations
-
-**DataFrame Caching**:
-- Cache DataFrames before multiple operations (count, filter)
-- Reduces recomputation of transformations
-- Unpersist after use to free memory
-
-**Edge Case Handling**:
-- Division by zero protection in recommendation calculations
-- Null checks before arithmetic operations
-- Fallback values for missing data
-
-### 5. Docker Base Image
-
-**eclipse-temurin:11-jdk-jammy** instead of openjdk:11-jdk-slim:
-- Reason: openjdk images are deprecated
-- eclipse-temurin is the official successor (maintained by Eclipse Foundation)
-- Provides same Java 11 functionality with better support
-
-### 6. Data Quality Strategy
-
-**Quarantine Zone Approach**:
-- Failed records moved to separate location with failure reasons
-- Allows data quality monitoring and issue investigation
-- Clean data proceeds to gold layer
-- Supports data quality reporting and improvement
+**Performance**:
+- DataFrame caching for operations requiring multiple passes
+- Proper null handling and edge case protection
+- Docker containerization with eclipse-temurin Java base image
 
 ---
 
@@ -260,15 +217,15 @@ recommendation:
 
 ## Troubleshooting
 
-**Issue: Out of Memory**
-- Increase Docker memory to 8GB in Docker Desktop settings
+**Out of Memory Errors:**
+- Increase Docker memory allocation to 8GB in Docker Desktop settings
 
-**Issue: Permission Denied**
+**Permission Issues:**
 ```bash
 chmod +x scripts/*.sh
 ```
 
-**Issue: Clean Previous Runs**
+**Clean Previous Runs:**
 ```bash
 docker compose run spark-app rm -rf /workspace/data/processed/*
 docker compose run spark-app rm -rf /workspace/data/quarantine/*
