@@ -10,6 +10,9 @@ import sys
 import argparse
 import yaml
 import logging
+import os
+import shutil
+from datetime import datetime
 from typing import Tuple
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
@@ -34,6 +37,38 @@ def get_spark_session(app_name: str) -> SparkSession:
     )
     spark.sparkContext.setLogLevel("WARN")
     return spark
+
+
+def extract_new_files(source_path: str, bronze_path: str, archive_path: str) -> str:
+    """
+    Extract new CSV files from source landing folder
+    Move to Bronze layer and archive with timestamp
+    Implements medallion architecture incremental processing pattern
+    """
+    os.makedirs(bronze_path, exist_ok=True)
+    os.makedirs(archive_path, exist_ok=True)
+    
+    files_processed = 0
+    for file in os.listdir(source_path):
+        if file.endswith(".csv"):
+            src_file = os.path.join(source_path, file)
+            dest_file = os.path.join(bronze_path, file)
+            
+            # Step 1: Move to bronze layer
+            shutil.move(src_file, dest_file)
+            logger.info(f"Moved file {file} → Bronze layer")
+            
+            # Step 2: Archive with timestamp for audit trail
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            archive_file = f"{os.path.splitext(file)[0]}_{timestamp}.csv"
+            archive_full_path = os.path.join(archive_path, archive_file)
+            shutil.copy(dest_file, archive_full_path)
+            logger.info(f"Archived {file} → {archive_full_path}")
+            
+            files_processed += 1
+    
+    logger.info(f"Processed {files_processed} new files from source to bronze")
+    return bronze_path
 
 
 def read_data(spark: SparkSession, input_path: str) -> DataFrame:
@@ -182,8 +217,8 @@ def write_to_hudi(valid_df: DataFrame, hudi_output_path: str):
         "hoodie.datasource.hive_sync.enable": "false"
     }
     
-    # Use append mode for incremental upserts (idempotent writes)
-    valid_df.write.format("hudi").options(**hudi_options).mode("append").save(hudi_output_path)
+    # Use overwrite mode as required by assignment
+    valid_df.write.format("hudi").options(**hudi_options).mode("overwrite").save(hudi_output_path)
     
     logger.info(f"Upserted {valid_df.count()} valid records to Hudi table: {hudi_output_path}")
 
@@ -196,23 +231,40 @@ def main(config_path: str):
     with open(config_path) as f:
         config = yaml.safe_load(f)
     
-    input_path = config['seller_catalog']['input_path']
-    hudi_output_path = config['seller_catalog']['hudi_output_path']
-    quarantine_path = config['seller_catalog']['quarantine_path']
+    # Support both old and new config formats for backward compatibility
+    seller_config = config['seller_catalog']
+    
+    # New format (recommended): source_path, bronze_path, archive_path
+    if 'source_path' in seller_config:
+        source_path = seller_config['source_path']
+        bronze_path = seller_config['bronze_path']
+        archive_path = seller_config['archive_path']
+    else:
+        # Old format fallback: use input_path as bronze_path
+        bronze_path = seller_config['input_path']
+        source_path = bronze_path  # No incremental processing in old format
+        archive_path = bronze_path.replace('/raw/', '/archive/')
+    
+    hudi_output_path = seller_config['hudi_output_path']
+    quarantine_path = seller_config['quarantine_path']
     
     # Initialize Spark
     spark = get_spark_session("ETL_SellerCatalog")
     
     try:
-        # ETL Pipeline
-        df = read_data(spark, input_path)
+        # Step 1: Extract new files (incremental processing)
+        if source_path != bronze_path:
+            bronze_path = extract_new_files(source_path, bronze_path, archive_path)
+        
+        # Step 2: ETL Pipeline
+        df = read_data(spark, bronze_path)
         cleaned_df = clean_data(df)
         valid_df, invalid_df = apply_dq_checks(cleaned_df)
         
-        # Write invalid records to quarantine
+        # Step 3: Write invalid records to quarantine
         write_to_quarantine(invalid_df, quarantine_path)
         
-        # Remove duplicates and write to Hudi
+        # Step 4: Remove duplicates and write to Hudi
         if valid_df.rdd.isEmpty() == False:
             deduped_df = remove_duplicates(valid_df)
             write_to_hudi(deduped_df, hudi_output_path)

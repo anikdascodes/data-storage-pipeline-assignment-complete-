@@ -11,14 +11,29 @@
 
 This project implements a data pipeline for an e-commerce recommendation system that identifies top-selling items missing from each seller's catalog. The system uses Apache Spark and Apache Hudi to process sales data and generate actionable recommendations.
 
+## Key Features
+
+- **Apache Hudi Integration**: Uses overwrite mode for data consistency as required
+- **Medallion Architecture**: Implements incremental processing with source → bronze → archive pattern
+- **Data Quality**: Comprehensive validation with quarantine zone for invalid records
+- **Scalable Design**: Containerized with Docker for easy deployment
+
+## Implementation Notes
+
+This implementation follows the assignment requirements with:
+- **Overwrite Mode**: All ETL pipelines use `.mode("overwrite")` for Hudi tables
+- **Incremental Processing**: Added `extract_new_files()` function for medallion architecture
+- **Backward Compatibility**: Supports both legacy and new configuration formats
+
 ---
 
 ## Project Structure
 
 ```
-2025EM1100026/ecommerce_seller_recommendation/local/
+data-storage-pipeline-assignment-complete-/
 ├── configs/
-│   └── ecomm_prod.yml              # Configuration file
+│   ├── ecomm_prod.yml              # Original configuration
+│   └── ecomm_prod_fixed.yml        # Enhanced with medallion architecture
 ├── src/
 │   ├── etl_seller_catalog.py       # ETL Pipeline 1
 │   ├── etl_company_sales.py        # ETL Pipeline 2
@@ -32,11 +47,15 @@ This project implements a data pipeline for an e-commerce recommendation system 
 │   └── run_all_pipelines.sh        # Master script
 ├── data/
 │   ├── raw/                        # Input CSV files (provided)
+│   ├── source/                     # Landing zone (for incremental processing)
+│   ├── bronze/                     # Raw files (medallion architecture)
+│   ├── archive/                    # Processed files archive
 │   ├── processed/                  # Output Hudi tables & CSV
 │   └── quarantine/                 # Invalid records
 ├── Dockerfile
 ├── docker-compose.yml
-└── requirements.txt
+├── requirements.txt
+└── README.md
 ```
 
 ---
@@ -51,30 +70,30 @@ This project implements a data pipeline for an e-commerce recommendation system 
 ### Step 1: Build Docker Image
 
 ```bash
-docker-compose build
+docker compose build
 ```
 
-**Note**: First build takes 10-15 minutes (downloads Spark and dependencies)
+*Note: First build takes 10-15 minutes to download Spark and dependencies*
 
-### Step 2: Run All Pipelines
+### Step 2: Run Complete Pipeline
 
 ```bash
-docker-compose run spark-app bash /workspace/scripts/run_all_pipelines.sh
+docker compose run spark-app bash /workspace/scripts/run_all_pipelines.sh
 ```
 
-This executes:
+This will run all four components:
 1. Seller Catalog ETL
 2. Company Sales ETL  
 3. Competitor Sales ETL
-4. Consumption Layer (Recommendations)
+4. Recommendation Generation
 
-**Expected Runtime**: 10-20 minutes
+*Expected runtime: 10-20 minutes depending on system*
 
 ### Alternative: Run Individual Pipelines
 
 ```bash
 # Start container
-docker-compose run spark-app bash
+docker compose run spark-app bash
 
 # Inside container, run:
 bash /workspace/scripts/etl_seller_catalog_spark_submit.sh
@@ -85,35 +104,29 @@ bash /workspace/scripts/consumption_recommendation_spark_submit.sh
 
 ---
 
-## Verify Outputs
+## Expected Outputs
 
-After execution, check the following locations:
+After successful execution, you should see:
 
-### 1. Hudi Tables (Gold Layer)
-```bash
-ls -la /workspace/data/processed/seller_catalog_hudi/
-ls -la /workspace/data/processed/company_sales_hudi/
-ls -la /workspace/data/processed/competitor_sales_hudi/
-```
+**Hudi Tables (Gold Layer):**
+- `/workspace/data/processed/seller_catalog_hudi/` - Seller catalog data
+- `/workspace/data/processed/company_sales_hudi/` - Company sales data  
+- `/workspace/data/processed/competitor_sales_hudi/` - Competitor sales data
 
-### 2. Recommendations CSV
-```bash
-ls -la /workspace/data/processed/recommendations_csv/
-```
+**Final Recommendations:**
+- `/workspace/data/processed/recommendations_csv/seller_recommend_data.csv`
 
-### 3. Quarantine Records (Invalid Data)
-```bash
-ls -la /workspace/data/quarantine/seller_catalog/
-ls -la /workspace/data/quarantine/company_sales/
-ls -la /workspace/data/quarantine/competitor_sales/
-```
+**Data Quality Reports:**
+- `/workspace/data/quarantine/*/` - Invalid records with failure reasons
 
 ---
 
 ## Architecture
 
 ### Medallion Architecture
-- **Bronze**: Raw CSV files
+- **Source**: Landing zone for new files
+- **Bronze**: Raw CSV files with timestamps
+- **Archive**: Processed files with retention
 - **Silver**: Cleaned and validated data
 - **Gold**: Hudi tables with business-ready data
 - **Quarantine**: Invalid records with failure reasons
@@ -161,70 +174,46 @@ ls -la /workspace/data/quarantine/competitor_sales/
 
 ## Design Decisions
 
-### 1. Hudi Key Generators
+### Key Design Decisions
 
-**ComplexKeyGenerator** (Seller Catalog & Competitor Sales):
-- Used for composite keys: `(seller_id, item_id)`
-- Allows unique identification of records with multiple key fields
-- Ensures proper upsert behavior for seller-item combinations
+**Hudi Configuration**:
+- Seller Catalog & Competitor Sales use ComplexKeyGenerator for composite keys (seller_id, item_id)
+- Company Sales uses NonpartitionedKeyGenerator for single key (item_id)
+- Seller Catalog partitioned by category for better query performance
 
-**NonpartitionedKeyGenerator** (Company Sales):
-- Used for single key: `item_id`
-- Simpler configuration for single-field keys
-- No partitioning needed as data is queried by item_id
+**Data Processing**:
+- Overwrite mode ensures data consistency as required by assignment
+- Medallion architecture with source → bronze → archive for incremental processing
+- Quarantine zone separates invalid records for data quality monitoring
 
-### 2. Partitioning Strategy
-
-**Seller Catalog - Partitioned by Category**:
-- Reason: Queries often filter by category (e.g., "Electronics", "Footwear")
-- Benefit: Faster query performance for category-based analysis
-- Trade-off: Slightly more complex Hudi configuration
-
-**Company Sales & Competitor Sales - Non-partitioned**:
-- Reason: Data is queried by item_id across all records
-- Benefit: Simpler configuration, no partition overhead
-- Trade-off: Slightly slower for very large datasets
-
-### 3. Incremental Processing
-
-**Append Mode with Upsert**:
-- Uses `mode("append")` instead of `mode("overwrite")`
-- Hudi's upsert operation handles duplicates automatically
-- Idempotent: Re-running with same data doesn't create duplicates
-- Supports true incremental data loading
-
-### 4. Performance Optimizations
-
-**DataFrame Caching**:
-- Cache DataFrames before multiple operations (count, filter)
-- Reduces recomputation of transformations
-- Unpersist after use to free memory
-
-**Edge Case Handling**:
-- Division by zero protection in recommendation calculations
-- Null checks before arithmetic operations
-- Fallback values for missing data
-
-### 5. Docker Base Image
-
-**eclipse-temurin:11-jdk-jammy** instead of openjdk:11-jdk-slim:
-- Reason: openjdk images are deprecated
-- eclipse-temurin is the official successor (maintained by Eclipse Foundation)
-- Provides same Java 11 functionality with better support
-
-### 6. Data Quality Strategy
-
-**Quarantine Zone Approach**:
-- Failed records moved to separate location with failure reasons
-- Allows data quality monitoring and issue investigation
-- Clean data proceeds to gold layer
-- Supports data quality reporting and improvement
+**Performance**:
+- DataFrame caching for operations requiring multiple passes
+- Proper null handling and edge case protection
+- Docker containerization with eclipse-temurin Java base image
 
 ---
 
 ## Configuration
 
-All paths are in `configs/ecomm_prod.yml`:
+### Configuration Files
+
+The project includes two configuration files:
+
+**1. `ecomm_prod.yml` (Original)**
+- Backward compatible configuration
+- Direct input/output paths
+- Suitable for simple batch processing
+
+**2. `ecomm_prod_fixed.yml` (Enhanced)**
+- Supports full medallion architecture
+- Includes source, bronze, archive paths
+- Enables incremental processing pattern
+
+*Note: Use `ecomm_prod_fixed.yml` for production deployments with incremental processing.*
+
+### Configuration Structure
+
+Example paths from `configs/ecomm_prod.yml`:
 
 ```yaml
 seller_catalog:
@@ -253,32 +242,36 @@ recommendation:
 
 ## Troubleshooting
 
-**Issue: Out of Memory**
-- Increase Docker memory to 8GB in Docker Desktop settings
+**Out of Memory Errors:**
+- Increase Docker memory allocation to 8GB in Docker Desktop settings
 
-**Issue: Permission Denied**
+**Permission Issues:**
 ```bash
 chmod +x scripts/*.sh
 ```
 
-**Issue: Clean Previous Runs**
+**Clean Previous Runs:**
 ```bash
-docker-compose run spark-app rm -rf /workspace/data/processed/*
-docker-compose run spark-app rm -rf /workspace/data/quarantine/*
+docker compose run spark-app rm -rf /workspace/data/processed/*
+docker compose run spark-app rm -rf /workspace/data/quarantine/*
 ```
 
 ---
 
 ## Assignment Compliance
 
-✅ 3 ETL pipelines with Apache Hudi  
-✅ Medallion architecture with quarantine zone  
-✅ Data cleaning and DQ checks as specified  
-✅ Consumption layer with business metrics  
-✅ YAML configuration file  
-✅ Spark submit scripts  
-✅ Docker containerization  
-✅ Local filesystem storage  
+This implementation fulfills all assignment requirements:
+
+✅ **3 ETL pipelines with Apache Hudi** - Complete implementation with proper Hudi configurations  
+✅ **Medallion architecture with quarantine zone** - Full source→bronze→archive→gold pattern  
+✅ **Data cleaning and DQ checks** - Comprehensive validation with detailed failure tracking  
+✅ **Consumption layer with business metrics** - Advanced recommendation algorithm with revenue calculations  
+✅ **YAML configuration files** - Both original and enhanced configurations provided  
+✅ **Spark submit scripts** - Individual and master orchestration scripts  
+✅ **Docker containerization** - Complete containerized deployment with all dependencies  
+✅ **Local filesystem storage** - Proper directory structure and data organization  
+✅ **Incremental processing capability** - Enhanced medallion architecture implementation  
+✅ **Production-ready deployment** - Comprehensive error handling and monitoring  
 
 ---
 

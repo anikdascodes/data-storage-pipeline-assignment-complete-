@@ -1,3 +1,6 @@
+# Original configuration (backward compatible)
+# Note: Use ecomm_prod_fixed.yml for incremental processing
+
 seller_catalog:
   input_path: "/workspace/data/raw/seller_catalog/"
   hudi_output_path: "/workspace/data/processed/seller_catalog_hudi/"
