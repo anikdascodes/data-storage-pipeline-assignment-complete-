@@ -11,6 +11,13 @@
 
 This project implements a data pipeline for an e-commerce recommendation system that identifies top-selling items missing from each seller's catalog. The system uses Apache Spark and Apache Hudi to process sales data and generate actionable recommendations.
 
+**✅ CRITICAL FIXES IMPLEMENTED:**
+- Fixed Hudi write mode from "append" to "overwrite" (as required by assignment)
+- Added incremental processing with medallion architecture (source → bronze → archive)
+- Maintained backward compatibility with existing configurations
+
+📋 **See [FIXES_SUMMARY.md](FIXES_SUMMARY.md) for detailed information about all changes.**
+
 ---
 
 ## Project Structure

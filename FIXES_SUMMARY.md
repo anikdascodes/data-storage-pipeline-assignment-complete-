@@ -1,12 +1,135 @@
-# Assignment Fixes Summary
+# Critical Fixes Summary - E-commerce Recommendation System
 
 ## Student: Anik Das (2025EM1100026)
 
 ---
 
-## 🚨 **Critical Issues Fixed**
+## 🎯 Issues Identified & Fixed
 
-This document explains what was fixed in the assignment submission to align with the assignment requirements.
+Based on the assignment requirements and retail.py reference implementation, two critical issues were identified and resolved:
+
+### 1. ❌ **Wrong Hudi Write Mode** 
+- **Problem**: All ETL files used `.mode("append")` instead of `.mode("overwrite")`
+- **Impact**: Assignment explicitly requires overwrite mode for daily data processing
+- **Solution**: Changed to `.mode("overwrite")` in all 3 ETL files
+
+### 2. ❌ **Missing Incremental Processing**
+- **Problem**: No medallion architecture implementation (source → bronze → archive)
+- **Impact**: Cannot handle daily incremental data as required by assignment
+- **Solution**: Implemented `extract_new_files()` function pattern from retail.py
+
+---
+
+## 🔧 Files Modified
+
+### ETL Pipeline Files (3 files)
+1. **`src/etl_seller_catalog.py`**
+2. **`src/etl_company_sales.py`**
+3. **`src/etl_competitor_sales.py`**
+
+**Changes made to each file:**
+- ✅ Added required imports: `os`, `shutil`, `datetime`
+- ✅ Added `extract_new_files()` function for incremental processing
+- ✅ Changed `.mode("append")` → `.mode("overwrite")`
+- ✅ Updated `main()` function to support both old and new config formats
+- ✅ Implemented 4-step processing: Extract → ETL → Quarantine → Hudi
+
+### Configuration Files (2 files)
+1. **`configs/ecomm_prod.yml`** - Updated with backward compatibility notes
+2. **`configs/ecomm_prod_fixed.yml`** - New format with incremental processing paths
+
+---
+
+## 🏗️ Architecture Implementation
+
+### Medallion Architecture Pattern
+```
+📁 Source (Landing Zone)     →  📁 Bronze (Raw Processing)  →  📁 Archive (Audit Trail)
+/data/source/seller_catalog/    /data/bronze/seller_catalog/    /data/archive/seller_catalog/
+                                                                                ↓
+                                📁 Gold (Hudi Tables)       ←  📁 Quarantine (Invalid Records)
+                                /data/processed/*_hudi/         /data/quarantine/*/
+```
+
+### Processing Flow
+1. **Extract**: Move new CSV files from source → bronze
+2. **Archive**: Copy files to archive with timestamp
+3. **ETL**: Process bronze files (clean, validate, dedupe)
+4. **Output**: Write valid records to Hudi (overwrite mode)
+
+---
+
+## 📋 Configuration Formats
+
+### New Format (Recommended)
+```yaml
+seller_catalog:
+  source_path: "/workspace/data/source/seller_catalog/"     # Landing zone
+  bronze_path: "/workspace/data/bronze/seller_catalog/"     # Processing layer
+  archive_path: "/workspace/data/archive/seller_catalog/"   # Audit trail
+  hudi_output_path: "/workspace/data/processed/seller_catalog_hudi/"
+  quarantine_path: "/workspace/data/quarantine/seller_catalog/"
+```
+
+### Legacy Format (Backward Compatible)
+```yaml
+seller_catalog:
+  input_path: "/workspace/data/raw/seller_catalog/"         # Direct processing
+  hudi_output_path: "/workspace/data/processed/seller_catalog_hudi/"
+  quarantine_path: "/workspace/data/quarantine/seller_catalog/"
+```
+
+---
+
+## ✅ Verification Results
+
+All critical fixes have been verified:
+
+- ✅ **Write Mode Changes**: All 3 ETL files now use `overwrite` mode
+- ✅ **Incremental Processing**: All 3 ETL files have `extract_new_files()` function
+- ✅ **Configuration Files**: Both old and new formats supported
+- ✅ **Code Structure**: Main functions updated for incremental processing
+
+---
+
+## 🚀 Usage Instructions
+
+### For New Incremental Processing
+```bash
+# Use the new configuration file
+python src/etl_seller_catalog.py --config configs/ecomm_prod_fixed.yml
+python src/etl_company_sales.py --config configs/ecomm_prod_fixed.yml
+python src/etl_competitor_sales.py --config configs/ecomm_prod_fixed.yml
+```
+
+### For Legacy Compatibility
+```bash
+# Use the original configuration file (still works)
+python src/etl_seller_catalog.py --config configs/ecomm_prod.yml
+python src/etl_company_sales.py --config configs/ecomm_prod.yml
+python src/etl_competitor_sales.py --config configs/ecomm_prod.yml
+```
+
+---
+
+## 🎉 Benefits of Fixes
+
+1. **Compliance**: Now meets assignment requirements (overwrite mode)
+2. **Scalability**: Supports daily incremental data processing
+3. **Auditability**: Archive layer provides complete processing history
+4. **Reliability**: Medallion architecture ensures data quality
+5. **Flexibility**: Backward compatible with existing configurations
+
+---
+
+## 📝 Testing
+
+Run the verification script to confirm all fixes:
+```bash
+python verify_fixes.py
+```
+
+Expected output: `4/4 critical fixes verified` ✅
 
 ---
 
