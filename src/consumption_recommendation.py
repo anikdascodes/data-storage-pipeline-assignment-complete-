@@ -302,6 +302,78 @@ def generate_recommendations(
     return final_recommendations
 
 
+def validate_recommendations(recommendations: DataFrame) -> bool:
+    """
+    Validate recommendation outputs for data quality
+    Returns True if all validations pass, False otherwise
+    """
+    logger.info("Validating recommendations quality...")
+
+    all_valid = True
+
+    # Check 1: Expected revenue should be positive
+    invalid_revenue = recommendations.filter(F.col("expected_revenue") < 0).count()
+    if invalid_revenue > 0:
+        logger.warning(f"⚠️  Found {invalid_revenue} recommendations with negative expected revenue")
+        all_valid = False
+    else:
+        logger.info(f"✓ All recommendations have positive expected revenue")
+
+    # Check 2: Expected units should be positive
+    invalid_units = recommendations.filter(F.col("expected_units_sold") <= 0).count()
+    if invalid_units > 0:
+        logger.warning(f"⚠️  Found {invalid_units} recommendations with zero/negative expected units")
+        all_valid = False
+    else:
+        logger.info(f"✓ All recommendations have positive expected units")
+
+    # Check 3: Market price should be reasonable (not zero)
+    zero_price = recommendations.filter(F.col("market_price") <= 0).count()
+    if zero_price > 0:
+        logger.warning(f"⚠️  Found {zero_price} recommendations with zero/negative market price")
+        all_valid = False
+    else:
+        logger.info(f"✓ All recommendations have positive market prices")
+
+    # Check 4: No null values in critical columns
+    null_checks = [
+        ("seller_id", recommendations.filter(F.col("seller_id").isNull()).count()),
+        ("item_id", recommendations.filter(F.col("item_id").isNull()).count()),
+        ("expected_revenue", recommendations.filter(F.col("expected_revenue").isNull()).count())
+    ]
+
+    for col_name, null_count in null_checks:
+        if null_count > 0:
+            logger.warning(f"⚠️  Found {null_count} null values in {col_name}")
+            all_valid = False
+
+    if all([count == 0 for _, count in null_checks]):
+        logger.info(f"✓ No null values in critical columns")
+
+    # Summary statistics
+    total_recommendations = recommendations.count()
+    unique_sellers = recommendations.select("seller_id").distinct().count()
+    unique_items = recommendations.select("item_id").distinct().count()
+
+    # Calculate statistics
+    stats = recommendations.agg(
+        F.avg("expected_revenue").alias("avg_revenue"),
+        F.max("expected_revenue").alias("max_revenue"),
+        F.min("expected_revenue").alias("min_revenue")
+    ).collect()[0]
+
+    logger.info(f"")
+    logger.info(f"Recommendation Statistics:")
+    logger.info(f"  Total recommendations: {total_recommendations:,}")
+    logger.info(f"  Unique sellers: {unique_sellers:,}")
+    logger.info(f"  Unique items recommended: {unique_items:,}")
+    logger.info(f"  Avg expected revenue: ${stats['avg_revenue']:,.2f}")
+    logger.info(f"  Max expected revenue: ${stats['max_revenue']:,.2f}")
+    logger.info(f"  Min expected revenue: ${stats['min_revenue']:,.2f}")
+
+    return all_valid
+
+
 def write_to_csv(df: DataFrame, output_path: str):
     """Write recommendations to CSV"""
     ensure_dir(os.path.dirname(output_path.rstrip('/')) or output_path)
@@ -365,7 +437,14 @@ def main(config_path: str):
             competitor_sales
         )
         company_gap = build_company_gap(top_competitor_items, seller_catalog)
-        
+
+        # Validate recommendations quality
+        is_valid = validate_recommendations(recommendations)
+        if not is_valid:
+            logger.warning("⚠️  Some validation checks failed. Review warnings above.")
+        else:
+            logger.info("✅ All validation checks passed!")
+
         # Write to CSV
         write_to_csv(recommendations, output_csv)
         write_company_gap_report(company_gap, output_csv)

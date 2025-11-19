@@ -12,6 +12,14 @@ This project helps e-commerce sellers figure out what products they should add t
 
 Built with Apache Spark and Apache Hudi to handle large datasets efficiently.
 
+### 📚 Quick Links
+
+- **[SUBMISSION_GUIDE.md](SUBMISSION_GUIDE.md)** - Complete submission package details, grading justification
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture, medallion layers, Hudi configuration
+- **[RUN_TESTS_NOW.md](RUN_TESTS_NOW.md)** - Quick start testing guide
+- **[CHANGELOG.md](CHANGELOG.md)** - All changes and fixes applied
+- **[TEST_PLAN.md](TEST_PLAN.md)** - Comprehensive testing scenarios
+
 ---
 
 ## Getting Started
