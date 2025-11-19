@@ -191,8 +191,8 @@ def write_to_quarantine(invalid_df: DataFrame, quarantine_path: str):
 
 
 def write_to_hudi(valid_df: DataFrame, hudi_output_path: str):
-    """Write valid records to Hudi table"""
-    
+    """Write valid records to Hudi table with schema evolution support"""
+
     hudi_options = {
         "hoodie.table.name": "company_sales_hudi",
         "hoodie.datasource.write.recordkey.field": "item_id",
@@ -202,7 +202,11 @@ def write_to_hudi(valid_df: DataFrame, hudi_output_path: str):
         "hoodie.datasource.write.table.type": "COPY_ON_WRITE",
         "hoodie.datasource.write.hive_style_partitioning": "true",
         "hoodie.datasource.write.keygenerator.class": "org.apache.hudi.keygen.NonpartitionedKeyGenerator",
-        "hoodie.datasource.hive_sync.enable": "false"
+        "hoodie.datasource.hive_sync.enable": "false",
+        # Schema evolution configurations
+        "hoodie.schema.on.read.enable": "true",
+        "hoodie.datasource.write.reconcile.schema": "true",
+        "hoodie.avro.schema.validate": "false"
     }
     
     # Use overwrite mode as required by assignment
