@@ -1,0 +1,20 @@
+# Input and output paths for ETL and consumption
+# Paths follow the sample assignment structure (raw → processed → CSV)
+
+seller_catalog:
+  input_path: "/workspace/data/raw/seller_catalog/"
+  hudi_output_path: "/workspace/data/processed/seller_catalog_hudi/"
+
+company_sales:
+  input_path: "/workspace/data/raw/company_sales/"
+  hudi_output_path: "/workspace/data/processed/company_sales_hudi/"
+
+competitor_sales:
+  input_path: "/workspace/data/raw/competitor_sales/"
+  hudi_output_path: "/workspace/data/processed/competitor_sales_hudi/"
+
+recommendation:
+  seller_catalog_hudi: "/workspace/data/processed/seller_catalog_hudi/"
+  company_sales_hudi: "/workspace/data/processed/company_sales_hudi/"
+  competitor_sales_hudi: "/workspace/data/processed/competitor_sales_hudi/"
+  output_csv: "/workspace/data/processed/recommendations_csv/seller_recommend_data.csv"

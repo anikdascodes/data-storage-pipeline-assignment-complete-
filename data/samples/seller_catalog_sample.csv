@@ -1,0 +1,101 @@
+seller_id,item_id,item_name,category,marketplace_price,stock_qty
+S140,I10000,Apple iPhone 15 Pro,Electronics,111360.8,135
+S114,I10001,Nike Air Zoom Pegasus,Footwear,101665.57,466
+S134,I10002,Dell XPS 13 Laptop,Electronics,63576.31,25
+S105,I10003,Adidas Ultraboost 23,Footwear,76049.62,23
+S135,I10004,Reebok Nano X4,Footwear,63217.21,239
+S137,I10005,LG 7kg Washing Machine,Home Appliances,113940.7,91
+S144,I10006,Zara Maxi Dress,Apparel,42040.77,120
+S148,I10007,LG 7kg Washing Machine,Home Appliances,14364.5,59
+S122,I10008,Dyson Vacuum Cleaner,Home Appliances,40044.87,32
+S146,I10009,Allen Solly Formal Pants,Apparel,19160.51,482
+S124,I10010,Dell XPS 13 Laptop,Electronics,44329.15,331
+S139,I10011,Dyson Vacuum Cleaner,Home Appliances,29246.14,45
+S102,I10012,Puma Running Shoes,Footwear,147789.62,447
+S114,I10013,Boat Smartwatch,Electronics,42056.05,335
+S123,I10014,Puma Running Shoes,Footwear,53611.97,353
+S117,I10015,Dell XPS 13 Laptop,Electronics,95428.25,283
+S146,I10016,Adidas Ultraboost 23,Footwear,69606.9,148
+S140,I10017,Puma Running Shoes,Footwear,126505.36,407
+S103,I10018,Nike Air Zoom Pegasus,Footwear,120853.35,215
+S117,I10019,Samsung Galaxy S24 Ultra,Electronics,137012.85,300
+S145,I10020,Samsung 55” Smart TV,Home Appliances,98487.08,212
+S141,I10021,H&M Cotton Shirt,Apparel,40098.58,136
+S147,I10022,Dyson Vacuum Cleaner,Home Appliances,64549.86,308
+S125,I10023,Samsung 55” Smart TV,Home Appliances,149599.2,80
+S132,I10024,Levis Denim Jacket,Apparel,113488.43,450
+S107,I10025,Adidas Ultraboost 23,Footwear,118914.86,226
+S138,I10026,Boat Smartwatch,Electronics,57551.08,249
+S133,I10027,Dyson Vacuum Cleaner,Home Appliances,129185.57,15
+S143,I10028,Dell XPS 13 Laptop,Electronics,112755.23,403
+S141,I10029,LG 7kg Washing Machine,Home Appliances,44377.27,90
+S129,I10030,Sony WH-1000XM5 Headphones,Electronics,145796.27,400
+S111,I10031,Sony WH-1000XM5 Headphones,Electronics,126328.57,269
+S138,I10032,Adidas Ultraboost 23,Footwear,56399.12,92
+S134,I10033,Dell XPS 13 Laptop,Electronics,48960.33,19
+S107,I10034,Philips Air Fryer,Home Appliances,36297.12,133
+S136,I10035,Apple iPhone 15 Pro,Electronics,109919.19,427
+S104,I10036,Adidas Ultraboost 23,Footwear,99131.75,494
+S135,I10037,Puma Running Shoes,Footwear,79386.23,320
+S127,I10038,Reebok Nano X4,Footwear,113411.15,363
+S112,I10039,Bajaj Mixer Grinder,Home Appliances,149273.83,342
+S123,I10040,Allen Solly Formal Pants,Apparel,67996.18,136
+S114,I10041,Sony WH-1000XM5 Headphones,Electronics,3643.62,293
+S114,I10042,Nike Air Zoom Pegasus,Footwear,11112.47,333
+S103,I10043,Nike Air Zoom Pegasus,Footwear,135859.29,450
+S121,I10044,Dell XPS 13 Laptop,Electronics,36080.69,352
+S131,I10045,Reebok Nano X4,Footwear,20279.62,488
+S136,I10046,H&M Cotton Shirt,Apparel,117799.6,423
+S126,I10047,Nike Air Zoom Pegasus,Footwear,14990.16,230
+S122,I10048,U.S. Polo T-Shirt,Apparel,70319.19,383
+S103,I10049,Apple iPhone 15 Pro,Electronics,60690.88,183
+S106,I10050,Adidas Ultraboost 23,Footwear,28935.23,239
+S108,I10051,H&M Cotton Shirt,Apparel,42141.5,137
+S104,I10052,Allen Solly Formal Pants,Apparel,15136.35,343
+S134,I10053,Apple iPhone 15 Pro,Electronics,138990.86,444
+S115,I10054,Skechers GoWalk,Footwear,73102.35,119
+S125,I10055,Samsung Galaxy S24 Ultra,Electronics,57155.48,209
+S116,I10056,Zara Maxi Dress,Apparel,63738.62,500
+S146,I10057,H&M Cotton Shirt,Apparel,28888.73,121
+S103,I10058,Sony WH-1000XM5 Headphones,Electronics,9045.21,309
+S130,I10059,Nike Air Zoom Pegasus,Footwear,144135.45,51
+S111,I10060,Dell XPS 13 Laptop,Electronics,10659.15,451
+S115,I10061,Levis Denim Jacket,Apparel,141267.62,301
+S115,I10062,Dell XPS 13 Laptop,Electronics,12755.52,346
+S137,I10063,Philips Air Fryer,Home Appliances,31035.75,376
+S120,I10064,Puma Running Shoes,Footwear,59668.98,353
+S141,I10065,Bajaj Mixer Grinder,Home Appliances,47767.49,394
+S104,I10066,Boat Smartwatch,Electronics,93362.31,298
+S106,I10067,Dell XPS 13 Laptop,Electronics,32365.57,145
+S108,I10068,LG 7kg Washing Machine,Home Appliances,131949.9,199
+S118,I10069,Skechers GoWalk,Footwear,125143.87,370
+S119,I10070,Dell XPS 13 Laptop,Electronics,45256.12,349
+S106,I10071,Puma Running Shoes,Footwear,17755.59,64
+S147,I10072,Puma Running Shoes,Footwear,42621.56,117
+S145,I10073,Samsung 55” Smart TV,Home Appliances,103279.82,446
+S116,I10074,Zara Maxi Dress,Apparel,135846.81,443
+S103,I10075,Boat Smartwatch,Electronics,124486.54,32
+S100,I10076,Samsung 55” Smart TV,Home Appliances,95747.45,144
+S110,I10077,Allen Solly Formal Pants,Apparel,105996.28,297
+S100,I10078,Apple iPhone 15 Pro,Electronics,141784.12,363
+S109,I10079,Sony WH-1000XM5 Headphones,Electronics,87584.18,85
+S127,I10080,Nike Air Zoom Pegasus,Footwear,46583.62,470
+S150,I10081,Sony WH-1000XM5 Headphones,Electronics,31905.44,137
+S142,I10082,Sony WH-1000XM5 Headphones,Electronics,117126.38,462
+S126,I10083,Adidas Ultraboost 23,Footwear,129757.55,419
+S111,I10084,Levis Denim Jacket,Apparel,27313.42,483
+S121,I10085,H&M Cotton Shirt,Apparel,40386.45,413
+S144,I10086,Boat Smartwatch,Electronics,130887.93,449
+S130,I10087,Adidas Ultraboost 23,Footwear,122578.7,245
+S122,I10088,Samsung 55” Smart TV,Home Appliances,33826.07,347
+S112,I10089,Zara Maxi Dress,Apparel,42150.16,45
+S149,I10090,Philips Air Fryer,Home Appliances,96400.52,214
+S143,I10091,LG 7kg Washing Machine,Home Appliances,17742.59,143
+S111,I10092,LG 7kg Washing Machine,Home Appliances,16705.18,232
+S122,I10093,Bajaj Mixer Grinder,Home Appliances,91127.22,271
+S107,I10094,Allen Solly Formal Pants,Apparel,28915.78,32
+S145,I10095,Levis Denim Jacket,Apparel,78227.09,422
+S134,I10096,Puma Running Shoes,Footwear,64977.96,495
+S142,I10097,Dyson Vacuum Cleaner,Home Appliances,47429.39,444
+S107,I10098,Dyson Vacuum Cleaner,Home Appliances,46737.06,219
+S120,I10099,Zara Maxi Dress,Apparel,83383.67,108

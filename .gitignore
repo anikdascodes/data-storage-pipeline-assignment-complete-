@@ -1,0 +1,31 @@
+# Generated data directories (exclude from Git)
+data/processed/
+data/quarantine/
+data/bronze/
+data/archive/
+data/metrics/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Keep these important files/directories
+!data/raw/
+!data/samples/
+!input_data_sets.zip

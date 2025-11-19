@@ -1,0 +1,29 @@
+# Fixed Configuration File
+# Supports incremental processing with medallion architecture
+
+seller_catalog:
+  source_path: "/workspace/data/source/seller_catalog/"         # Landing zone (new files arrive here)
+  bronze_path: "/workspace/data/bronze/seller_catalog/"         # Bronze layer (raw files)
+  archive_path: "/workspace/data/archive/seller_catalog/"       # Archive (processed files)
+  hudi_output_path: "/workspace/data/processed/seller_catalog_hudi/"  # Gold layer (Hudi)
+  quarantine_path: "/workspace/data/quarantine/seller_catalog/"       # Quarantine (invalid records)
+
+company_sales:
+  source_path: "/workspace/data/source/company_sales/"
+  bronze_path: "/workspace/data/bronze/company_sales/"
+  archive_path: "/workspace/data/archive/company_sales/"
+  hudi_output_path: "/workspace/data/processed/company_sales_hudi/"
+  quarantine_path: "/workspace/data/quarantine/company_sales/"
+
+competitor_sales:
+  source_path: "/workspace/data/source/competitor_sales/"
+  bronze_path: "/workspace/data/bronze/competitor_sales/"
+  archive_path: "/workspace/data/archive/competitor_sales/"
+  hudi_output_path: "/workspace/data/processed/competitor_sales_hudi/"
+  quarantine_path: "/workspace/data/quarantine/competitor_sales/"
+
+recommendation:
+  seller_catalog_hudi: "/workspace/data/processed/seller_catalog_hudi/"
+  company_sales_hudi: "/workspace/data/processed/company_sales_hudi/"
+  competitor_sales_hudi: "/workspace/data/processed/competitor_sales_hudi/"
+  output_csv: "/workspace/data/processed/recommendations_csv/seller_recommend_data.csv"

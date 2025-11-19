@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  spark-app:
+    build: .
+    container_name: ecommerce-recommendation-pipeline
+    volumes:
+      - ./data:/workspace/data
+      - ./configs:/workspace/configs
+      - ./src:/workspace/src
+      - ./scripts:/workspace/scripts
+      - ./input_data_sets:/workspace/input_data_sets
+    environment:
+      - SPARK_HOME=/opt/spark
+      - PYTHONPATH=/opt/spark/python:/opt/spark/python/lib/py4j-0.10.9.7-src.zip
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
