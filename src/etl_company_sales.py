@@ -208,14 +208,21 @@ def apply_dq_checks(df: DataFrame) -> Tuple[DataFrame, DataFrame, int, int]:
 
 
 def remove_duplicates(df: DataFrame) -> DataFrame:
-    """Remove duplicates based on item_id"""
-    # Keep the first occurrence based on sale_date (most recent)
-    deduped_df = (
-        df
-        .orderBy(F.col("sale_date").desc())
-        .dropDuplicates(["item_id"])
-    )
-    
+    """
+    Remove exact duplicate rows (all columns identical)
+
+    NOTE: For company sales data, we DO NOT deduplicate by item_id because:
+    - Sales data is transactional (one item can sell multiple times)
+    - Each row represents a distinct sale event
+    - Aggregation should happen in the consumption layer, not ETL
+    - Deduplicating by item_id would lose valuable transaction history
+
+    We only remove rows where ALL columns are identical (likely data errors)
+    """
+    deduped_df = df.dropDuplicates()  # Remove exact duplicates only
+
+    duplicates_removed = df.count() - deduped_df.count()
+    logger.info(f"Removed {duplicates_removed} exact duplicate rows")
     logger.info(f"After deduplication: {deduped_df.count()} records")
     return deduped_df
 
@@ -302,7 +309,11 @@ def main(config_path: str):
         write_to_quarantine(invalid_df, invalid_count, quarantine_path)
         invalid_df.unpersist()
 
-        # Step 4: Remove duplicates and write to Hudi
+        # Step 4: Remove exact duplicate rows and write to Hudi
+        # NOTE: We only remove exact duplicates (all columns identical)
+        # We do NOT deduplicate by item_id because sales data is transactional:
+        # - Same item can sell multiple times (different dates/quantities)
+        # - Aggregation happens in consumption layer, not here
         if valid_count > 0:
             deduped_df = remove_duplicates(valid_df)
             output_count = deduped_df.count()
