@@ -93,11 +93,19 @@ docker compose build
 
 ### Step 3: Run Complete Pipeline
 
+#### First Run (or Fresh Start)
+```bash
+docker compose run spark-app bash /workspace/scripts/run_all_pipelines.sh clean
+```
+
+#### Subsequent Runs (without cleanup)
 ```bash
 docker compose run spark-app bash /workspace/scripts/run_all_pipelines.sh
 ```
 
 **Time:** 10-20 minutes
+
+**Note:** Use `clean` argument to remove previous run data and avoid Hudi metadata conflicts.
 **Runs:** All 4 pipelines in sequence (3 ETL + 1 consumption)
 
 ### Expected Output
@@ -392,6 +400,55 @@ docker compose run spark-app bash /workspace/scripts/run_all_pipelines.sh
 ls -lh data/processed/
 head -20 data/processed/recommendations_csv/part-*.csv
 cat data/metrics/*.json | jq '.records'
+```
+
+---
+
+## Optimization & Troubleshooting
+
+### Performance Optimizations
+
+**Docker Build Speed:**
+- Uses CDN mirrors (dlcdn.apache.org) with automatic fallback to archives
+- Multi-layer caching for faster rebuilds
+- Optimized downloads with timeout and retry logic
+
+**Spark Configuration:**
+- Driver memory: 2GB (configurable via `SPARK_DRIVER_MEMORY`)
+- Executor memory: 2GB (configurable via `SPARK_EXECUTOR_MEMORY`)
+- Adaptive query execution enabled
+- Dynamic partition coalescing enabled
+
+**Memory Management:**
+- Docker resource limits: 4GB max, 2GB reserved
+- Adjust in `docker-compose.yml` based on your machine
+
+### Common Issues
+
+**1. FileAlreadyExistsException (Hudi metadata)**
+```
+org.apache.hadoop.fs.FileAlreadyExistsException: .hoodie_partition_metadata
+```
+**Solution:** Run with cleanup:
+```bash
+docker compose run spark-app bash /workspace/scripts/run_all_pipelines.sh clean
+```
+
+**2. Memory Warnings**
+```
+WARN MemoryStore: Not enough space to cache broadcast
+WARN RowBasedKeyValueBatch: Calling spill()
+```
+**Expected behavior** - These warnings are normal in constrained environments. Spark automatically spills to disk.
+
+**3. Slow Docker Build**
+If download is slow, the Dockerfile will automatically retry and fallback to archive mirrors.
+
+### Manual Cleanup
+
+Remove all processed data:
+```bash
+docker compose run spark-app bash /workspace/scripts/clean_previous_run.sh
 ```
 
 ---

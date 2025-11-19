@@ -5,6 +5,13 @@ echo "E-commerce Recommendation System Pipeline"
 echo "=========================================="
 echo ""
 
+# Optional: Clean previous run (pass "clean" as argument)
+if [ "$1" == "clean" ]; then
+    echo "Cleaning previous run data..."
+    bash /workspace/scripts/clean_previous_run.sh
+    echo ""
+fi
+
 # Run ETL pipelines
 echo "Step 1/4: Running ETL for Seller Catalog..."
 bash /workspace/scripts/etl_seller_catalog_spark_submit.sh
