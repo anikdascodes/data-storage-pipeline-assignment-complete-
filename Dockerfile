@@ -1,35 +1,14 @@
-FROM eclipse-temurin:11-jdk-jammy
+FROM bitnami/spark:3.5.0
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    wget \
-    procps \
-    && rm -rf /var/lib/apt/lists/*
+# Switch to root to install packages
+USER root
 
-# Install Spark
-ENV SPARK_VERSION=3.5.0
-ENV HADOOP_VERSION=3
-ENV SPARK_HOME=/opt/spark
-ENV PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
-ENV PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.10.9.7-src.zip:$PYTHONPATH
-
-# Download Spark from CDN mirror (faster than Apache archives)
-RUN wget -q --timeout=300 --tries=3 \
-    https://dlcdn.apache.org/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz || \
-    wget -q --timeout=300 --tries=3 \
-    https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz && \
-    tar -xzf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz && \
-    mv spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} ${SPARK_HOME} && \
-    rm spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
+# Install Python dependencies
+COPY requirements.txt /tmp/
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
 
 # Set working directory
 WORKDIR /workspace
-
-# Copy requirements and install Python packages
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Create data directories
 RUN mkdir -p /workspace/data/raw/seller_catalog && \
@@ -45,5 +24,10 @@ COPY scripts /workspace/scripts
 
 # Make scripts executable
 RUN chmod +x /workspace/scripts/*.sh
+
+# Set environment variables
+ENV SPARK_HOME=/opt/bitnami/spark
+ENV PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.10.9.7-src.zip:$PYTHONPATH
+ENV PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
 
 CMD ["/bin/bash"]
