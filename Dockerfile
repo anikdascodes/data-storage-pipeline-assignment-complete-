@@ -1,4 +1,4 @@
-FROM bitnami/spark:3.5.0
+FROM apache/spark-py:v3.5.0
 
 # Switch to root to install packages
 USER root
@@ -25,9 +25,7 @@ COPY scripts /workspace/scripts
 # Make scripts executable
 RUN chmod +x /workspace/scripts/*.sh
 
-# Set environment variables
-ENV SPARK_HOME=/opt/bitnami/spark
-ENV PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.10.9.7-src.zip:$PYTHONPATH
-ENV PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
+# Set environment variables (Spark already configured in base image)
+ENV PYTHONPATH=/opt/spark/python:/opt/spark/python/lib/py4j-0.10.9.7-src.zip:$PYTHONPATH
 
 CMD ["/bin/bash"]
