@@ -12,6 +12,11 @@ __pycache__/
 *.pyd
 .Python
 
+# Backup files
+*.backup
+*.bak
+*~
+
 # Logs
 *.log
 
