@@ -5,6 +5,9 @@ data/bronze/
 data/archive/
 data/metrics/
 
+# Archive folder (extra documentation, not for submission)
+.archive/
+
 # Python cache
 __pycache__/
 *.pyc
