@@ -1,7 +1,12 @@
-FROM apache/spark-py:v3.5.0
+FROM apache/spark:3.5.0
 
-# Switch to root to install packages
+# Switch to root to install Python and dependencies
 USER root
+
+# Install Python and pip
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY requirements.txt /tmp/
@@ -25,7 +30,7 @@ COPY scripts /workspace/scripts
 # Make scripts executable
 RUN chmod +x /workspace/scripts/*.sh
 
-# Set environment variables (Spark already configured in base image)
+# Set environment variables
 ENV PYTHONPATH=/opt/spark/python:/opt/spark/python/lib/py4j-0.10.9.7-src.zip:$PYTHONPATH
 
 CMD ["/bin/bash"]
